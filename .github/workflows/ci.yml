@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-rootfs:
+    runs-on: ubuntu-latest
+    outputs:
+      artifacts:
+        paths:
+          - "*.tar.gz"
+          - "*.release.version"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Setup environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y arch-test binfmt-support debootstrap qemu-user-static wget
+      
+      - name: Install Kali archive keyring
+        run: |
+          KEYRING_PKG_URL=$(wget -nv -O - https://http.kali.org/kali/dists/kali-rolling/main/binary-amd64/Packages.gz | gzip -dc | grep ^Filename: | grep kali-archive-keyring | head -n 1 | awk '{print $2}')
+          KEYRING_PKG_URL="https://http.kali.org/kali/$KEYRING_PKG_URL"
+          wget -nv "$KEYRING_PKG_URL"
+          sudo dpkg -i kali-archive-keyring_*_all.deb
+          rm kali-archive-keyring_*_all.deb
+      
+      - name: Test architectures
+        run: |
+          echo "Arch test:"
+          for arch in amd64 arm64 armhf armel i386; do
+            echo -n "* $arch: " && /usr/lib/arch-test/$arch
+          done
+      
+      - name: Build rootfs
+        run: |
+          for image in kali-rolling kali-last-release kali-dev; do
+            for arch in amd64 arm64 armhf armel i386; do
+              echo "============================================================"
+              echo "Building rootfs $image/$arch"
+              echo "============================================================"
+              ./build-rootfs.sh "$image" "$arch"
+            done
+          done
