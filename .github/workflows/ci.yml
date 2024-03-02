@@ -8,11 +8,6 @@ on:
 jobs:
   build-rootfs:
     runs-on: ubuntu-latest
-    outputs:
-      artifacts:
-        paths:
-          - "*.tar.gz"
-          - "*.release.version"
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
