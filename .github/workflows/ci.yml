@@ -8,11 +8,6 @@ on:
 jobs:
   build-rootfs:
     runs-on: ubuntu-latest
-    outputs:
-      artifacts:
-        paths:
-          - "*.tar.gz"
-          - "*.release.version"
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -39,11 +34,13 @@ jobs:
       
       - name: Build rootfs
         run: |
+          #!/bin/bash
+
           for image in kali-rolling kali-last-release kali-dev; do
             for arch in amd64 arm64 armhf armel i386; do
               echo "============================================================"
               echo "Building rootfs $image/$arch"
               echo "============================================================"
-              ./build-rootfs.sh "$image" "$arch"
+              sudo ./build-rootfs.sh "$image" "$arch"
             done
           done
